@@ -1,37 +1,26 @@
 {
-  "id": "26d1be96-153e-49ea-9b4f-225500659bf0",
-  "name": "DownloadTeamCityArtifacts",
+  "id": "c31ade1c-5af2-4df9-a101-56667a55bb4a",
+  "name": "DownloadNexusArtifacts",
   "friendlyName": "ms-resource:loc.friendlyName",
   "description": "ms-resource:loc.description",
   "helpMarkDown": "ms-resource:loc.helpMarkDown",
   "category": "Utility",
-  "author": "ms-vscs-rm",
+  "author": "irisliu",
   "version": {
-    "Major": 15,
-    "Minor": 136,
-    "Patch": 0
+    "Major": 1,
+    "Minor": 0,
+    "Patch": 7
   },
   "demands": [],
   "minimumAgentVersion": "2.0.0",
   "inputs": [
     {
       "name": "connection",
-      "type": "connectedService:teamcity",
+      "type": "connectedService:nuget:UsernamePassword",
       "label": "ms-resource:loc.input.label.connection",
       "defaultValue": "",
       "required": true,
       "helpMarkDown": "ms-resource:loc.input.help.connection"
-    },
-    {
-      "name": "project",
-      "type": "pickList",
-      "label": "ms-resource:loc.input.label.project",
-      "defaultValue": "",
-      "required": true,
-      "properties": {
-        "EditableOptions": "True"
-      },
-      "helpMarkDown": "ms-resource:loc.input.help.project"
     },
     {
       "name": "definition",
@@ -45,23 +34,26 @@
       "helpMarkDown": "ms-resource:loc.input.help.definition"
     },
     {
-      "name": "version",
+      "name": "component",
       "type": "pickList",
-      "label": "ms-resource:loc.input.label.version",
+      "label": "ms-resource:loc.input.label.component",
       "defaultValue": "",
       "required": true,
       "properties": {
         "EditableOptions": "True"
       },
-      "helpMarkDown": "ms-resource:loc.input.help.version"
+      "helpMarkDown": "ms-resource:loc.input.help.component"
     },
     {
-      "name": "itemPattern",
-      "type": "string",
-      "label": "ms-resource:loc.input.label.itemPattern",
-      "defaultValue": "**",
-      "required": false,
-      "helpMarkDown": "ms-resource:loc.input.help.itemPattern"
+      "name": "version",
+      "type": "pickList",
+      "label": "ms-resource:loc.input.label.version",
+      "defaultValue": "Latest",
+      "required": true,
+      "properties": {
+        "EditableOptions": "True"
+      },
+      "helpMarkDown": "ms-resource:loc.input.help.version"
     },
     {
       "name": "downloadPath",
@@ -75,28 +67,28 @@
   "dataSourceBindings": [
     {
       "endpointId": "$(connection)",
-      "target": "project",
-      "dataSourceName": "Projects",
-      "resultTemplate": "{ \"Value\" : \"{{id}}\", \"DisplayValue\" : \"{{{name}}} ({{{id}}})\" }"
+      "target": "definition",
+      "dataSourceName": "Repository",
+      "resultTemplate": "{ \"Value\" : \"{{name}}\", \"DisplayValue\" : \"{{{name}}}\" }"
     },
     {
       "endpointId": "$(connection)",
-      "target": "definition",
-      "dataSourceName": "BuildConfigurations",
+      "target": "component",
+      "dataSourceName": "Components",
       "parameters": {
-        "project": "$(project)"
+        "definition": "$(definition)"
       },
-      "resultTemplate": "{ \"Value\" : \"{{id}}\", \"DisplayValue\" : \"{{{name}}}\" }"
+      "resultTemplate": "{ \"Value\" : \"{{name}}\", \"DisplayValue\" : \"{{{name}}}\" }"
     },
     {
       "endpointId": "$(connection)",
       "target": "version",
-      "dataSourceName": "Builds",
+      "dataSourceName": "Versions",
       "parameters": {
-        "project": "$(project)",
-        "definition": "$(definition)"
+        "definition": "$(definition)",
+        "component": "$(component)"
       },
-      "resultTemplate": "{ \"Value\" : \"{{id}}\", \"DisplayValue\" : \"{{{number}}}\" }"
+      "resultTemplate": "{ \"Value\" : \"{{version}}\", \"DisplayValue\" : \"{{{version}}}\" }"
     }
   ],
   "instanceNameFormat": "ms-resource:loc.instanceNameFormat",

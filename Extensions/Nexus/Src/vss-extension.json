@@ -1,14 +1,14 @@
 {
   "manifestVersion": 1.0,
-  "id": "vss-services-teamcity",
-  "name": "TeamCity artifacts for Release Management",
+  "id": "vss-services-nexus",
+  "name": "Nexus artifacts for Release Management",
   "publisher": "irisliu",
-  "version": "1.0.1",
+  "version": "1.0.28",
   "public": false,
-  "description": "Tools related to connecting with TeamCity",
+  "description": "Tools related to connecting with Nexus",
   "_description.comment": "The below format to define artifact extensions is currently in preview and may change in future.",
   "categories": [ "Azure Pipelines","Azure Artifacts" ],
-  "Tags": [ "TeamCity", "Release", "DevOps", "Artifacts" ],
+  "Tags": [ "Nexus", "Release", "DevOps", "Artifacts" ],
   "targets": [
     {
       "id": "Microsoft.VisualStudio.Services"
@@ -16,7 +16,7 @@
   ],
   "demands": [ "contribution/ms.vss-releaseartifact.artifact-types" ],
   "icons": {
-    "default": "images\\tc-icon128px.png"
+    "default": "images\\logo.png"
   },
   "repository": {
     "type": "git",
@@ -52,54 +52,39 @@
       "addressable": true
     },
     {
-      "path": "Tasks/DownloadTeamCityArtifacts"
+      "path": "Tasks/DownloadNexusArtifacts"
     }
   ],
   "contributions": [
     {
-      "id": "teamcity-endpoint-type",
-      "description": "Service Endpoint type for all TeamCity connections",
-      "_description.comment": "Don't Localize the word 'TeamCity'",
+      "id": "nexus-endpoint-type",
+      "description": "Service Endpoint type for all Nexus connections",
+      "_description.comment": "Don't Localize the word 'Nexus'",
       "type": "ms.vss-endpoint.service-endpoint-type",
       "targets": [ "ms.vss-endpoint.endpoint-types" ],
       "properties": {
-        "name": "teamcitytest",
-        "displayName": "TeamCity",
+        "name": "nuget",
+        "displayName": "Nexus",
         "dataSources": [
           {
-            "name": "TestConnection",
-            "endpointUrl": "{{endpoint.url}}httpAuth/app/rest/projects",
-            "resultSelector": "jsonpath:$.project[?(@.id!='_Root')]"
+            "name": "Repository",
+            "endpointUrl": "{{endpoint.url}}service/rest/v1/repositories",
+            "resultSelector": "jsonpath:$.[*]"
           },
           {
-            "name": "Projects",
-            "endpointUrl": "{{endpoint.url}}httpAuth/app/rest/projects",
-            "resultSelector": "jsonpath:$.project[?(@.id!='_Root')]"
+            "name": "Components",
+            "endpointUrl": "{{endpoint.url}}service/rest/v1/components?repository={{definition}}",
+            "resultSelector": "jsonpath:$.items[*]"
           },
           {
-            "name": "BuildConfigurations",
-            "endpointUrl": "{{endpoint.url}}httpAuth/app/rest/projects/{{project}}/buildTypes",
-            "resultSelector": "jsonpath:$.buildType[*]"
+            "name": "Versions",
+            "endpointUrl": "{{endpoint.url}}service/rest/v1/components?repository={{definition}}",
+            "resultSelector": "jsonpath:$.items[?(@.name=='{{component}}')]"
           },
           {
-            "name": "Builds",
-            "endpointUrl": "{{endpoint.url}}httpAuth/app/rest/buildTypes/{{definition}}/builds/?locator=branch:default:any",
-            "resultSelector": "jsonpath:$.build[?(@.status=='SUCCESS')]"
-          },
-          {
-            "name": "LatestBuild",
-            "endpointUrl": "{{endpoint.url}}httpAuth/app/rest/buildTypes/{{definition}}/builds?locator=branch:default:any&count=1&status=success",
-            "resultSelector": "jsonpath:$.build[*]"
-          },
-          {
-            "name": "Artifacts",
-            "endpointUrl": "{{endpoint.url}}httpAuth/app/rest/builds/id:{{version}}/artifacts/children/{{itemPath}}",
-            "resultSelector": "jsonpath:$.file[*]"
-          },
-          {
-            "name": "BranchName",
-            "endpointUrl": "{{endpoint.url}}httpAuth/app/rest/builds/id:{{version}}",
-            "resultSelector": "jsonpath:$.branchName"
+            "name": "LatestVersion",
+            "endpointUrl": "{{endpoint.url}}service/rest/v1/components?repository={{definition}}",
+            "resultSelector": "jsonpath:$.items[?(@.name=='{{component}}')].assets[?(@.nuget.is_latest_version == true)].nuget"
           }
         ],
         "authenticationSchemes": [
@@ -111,27 +96,27 @@
       }
     },
     {
-      "id": "teamcity-task",
+      "id": "nexus-task",
       "type": "ms.vss-distributed-task.task",
       "targets": [
         "ms.vss-distributed-task.tasks"
       ],
       "properties": {
-        "name": "Tasks/DownloadTeamCityArtifacts"
+        "name": "Tasks/DownloadNexusArtifacts"
         }
     },
     {
-      "id": "teamcity-release-artifact-type",
-      "description": "TeamCity Artifact",
+      "id": "nexus-release-artifact-type",
+      "description": "Nexus Artifact",
       "type": "ms.vss-releaseartifact.release-artifact-type",
       "targets": [ "ms.vss-releaseartifact.artifact-types" ],
       "properties": {
-        "name": "TeamCity",
-        "displayName": "TeamCity",
-        "_displayName.comment": "Don't Localize the word 'TeamCity'",
-        "endpointTypeId": "teamcity",
-        "uniqueSourceIdentifier": "{{connection}}:{{project}}:{{definition}}",
-        "downloadTaskId": "26d1be96-153e-49ea-9b4f-225500659bf0",
+        "name": "Nexus",
+        "displayName": "Nexus",
+        "_displayName.comment": "Don't Localize the word 'Nexus'",
+        "endpointTypeId": "nuget:UsernamePassword",
+        "uniqueSourceIdentifier": "{{connection}}:{{definition}}:{{component}}",
+        "downloadTaskId": "c31ade1c-5af2-4df9-a101-56667a55bb4a",
         "artifactType": "Build",
         "inputDescriptors": [
           {
@@ -148,9 +133,9 @@
             }
           },
           {
-            "id": "project",
-            "name": "Project",
-            "description": "Project Id",
+            "id": "definition",
+            "name": "Nexus Repository",
+            "description": "select a nexus repository name to pull package from",
             "inputMode": "Combo",
             "isConfidential": false,
             "hasDynamicValueInformation": true,
@@ -164,15 +149,15 @@
             }
           },
           {
-            "id": "definition",
-            "name": "Build Configuration",
-            "description": "Build Configuration Id",
+            "id": "component",
+            "name": "Nuget Package Name",
+            "description": "Nexus package",
             "inputMode": "Combo",
             "isConfidential": false,
             "hasDynamicValueInformation": true,
             "dependencyInputIds": [
               "connection",
-              "project"
+              "definition"
             ],
             "validation": {
               "isRequired": true,
@@ -224,82 +209,48 @@
             "hasDynamicValueInformation": true,
             "dependencyInputIds": [
               "connection",
-              "project",
               "definition",
+              "component",
               "defaultVersionType"
             ],
             "validation": {
               "isRequired": true,
               "dataType": "string"
             }
-          },
-          {
-            "id": "artifacts",
-            "name": "Artifacts",
-            "description": "Build artifacts",
-            "inputMode": "none",
-            "isConfidential": false,
-            "hasDynamicValueInformation": true,
-            "dependencyInputIds": [
-              "connection",
-              "project",
-              "definition"
-            ],
-            "validation": {
-              "isRequired": false,
-              "dataType": "string",
-              "maxLength": 300
-            }
           }
         ],
+        "taskInputMapping":{
+          "connection": "{{{connection}}}",
+          "definition":"{{{definition}}}",
+          "component": "{{{component}}}"
+        },
         "dataSourceBindings": [
           {
-            "target": "project",
-            "dataSourceName": "Projects",
-            "resultTemplate": "{ Value : \"{{id}}\", DisplayValue : \"{{{name}}} ({{{id}}})\" }"
+            "target": "definition",
+            "dataSourceName": "Repository",
+            "resultTemplate": "{ Value : \"{{{name}}}\", DisplayValue : \"{{{name}}}\" }"
           },
           {
-            "target": "definition",
-            "dataSourceName": "BuildConfigurations",
-            "resultTemplate": "{ Value : \"{{id}}\", DisplayValue : \"{{{name}}}\" }"
+            "target": "component",
+            "dataSourceName": "Components",
+            "resultTemplate": "{ Value : \"{{name}}\", DisplayValue : \"{{{name}}}\" }"
           },
           {
             "target": "versions",
-            "dataSourceName": "Builds",
-            "resultTemplate": "{ Value : \"{{id}}\", DisplayValue : \"{{{number}}}\" }"
+            "dataSourceName": "Versions",
+            "resultTemplate": "{ Value : \"{{version}}\", DisplayValue : \"{{{version}}}\" }"
           },
           {
             "target": "defaultVersionSpecific",
-            "dataSourceName": "Builds",
-            "resultTemplate": "{ Value : \"{{id}}\", DisplayValue : \"{{{number}}}\" }"
+            "dataSourceName": "Versions",
+            "resultTemplate": "{ Value : \"{{version}}\", DisplayValue : \"{{{version}}}\" }"
           },
           {
             "target": "latestversion",
-            "dataSourceName": "LatestBuild",
-            "resultTemplate": "{ Value : \"{{id}}\", DisplayValue : \"{{{number}}}\" }"
-          },
-          {
-            "target": "artifactDetails",
-            "resultTemplate": "{ Name: \"{{version}}\", StreamType: \"zip\", downloadUrl : \"{{endpoint.url}}downloadArtifacts.html?buildTypeId={{definition}}&buildId={{version}}\" }"
-          },
-          {
-            "target": "artifacts",
-            "dataSourceName": "Artifacts",
-            "resultTemplate": "{ Value : \"{{#if itemPath}}{{{itemPath}}}/{{{name}}}{{else}}{{{name}}}{{/if}}\", DisplayValue : \"{{{name}}}\", data: { artifactType: \"{{#if children}}folder{{else}}archive{{/if}}\" } }"
-          },
-          {
-            "target": "artifactItems",
-            "dataSourceName": "Artifacts",
-            "resultTemplate": "{ Value : \"{{#if itemPath}}{{{itemPath}}}/{{{name}}}{{else}}{{{name}}}{{/if}}\", DisplayValue : \"{{{name}}}\", data: { itemType: \"{{#if children}}folder{{else}}file{{/if}}\" } }"
-          },
-          {
-            "target": "branchName",
-            "dataSourceName": "BranchName"
+            "dataSourceName": "LatestVersion",
+            "resultTemplate": "{ Value : \"{{version}}\", DisplayValue : \"{{{version}}}\" }"
           }
-        ],
-        "browsableArtifactTypeMapping": {
-          "folder": "artifactItems"
-        }
+        ]
       }
     }
   ]

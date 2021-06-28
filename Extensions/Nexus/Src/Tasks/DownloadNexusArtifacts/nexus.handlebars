@@ -1,0 +1,11 @@
+[
+{{#package}}
+  {
+    "path" : "{{../endpoint.url}}/repository/{{../definition}}/{{../component}}/{{../version}}",
+    "itemType": "file",
+    "metadata" : {
+      "downloadUrl": "{{../endpoint.url}}/repository/{{../definition}}/{{../component}}/{{../version}}"
+    }
+  }{{#unless @last}},{{/unless}}
+{{/package}}
+]

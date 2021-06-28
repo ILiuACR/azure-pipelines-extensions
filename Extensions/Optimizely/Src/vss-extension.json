@@ -2,7 +2,7 @@
 	"manifestVersion": 1,
 	"id": "AzureDevOpsOptimizely",
 	"version": "1.0.15",
-	"publisher": "ms-devlabs",
+	"publisher": "irisliu",
 	"name": "Optimizely",
 	"description": "Extension for Optimizely integration.",
 	"public": true,

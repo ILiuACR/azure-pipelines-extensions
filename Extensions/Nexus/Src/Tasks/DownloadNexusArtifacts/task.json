@@ -1,0 +1,105 @@
+{
+  "id": "c31ade1c-5af2-4df9-a101-56667a55bb4a",
+  "name": "DownloadNexusArtifacts",
+  "friendlyName": "Download Artifacts - Nexus",
+  "description": "Download artifacts from nexus build",
+  "helpMarkDown": "",
+  "category": "Utility",
+  "author": "irisliu",
+  "version": {
+    "Major": 1,
+    "Minor": 0,
+    "Patch": 7
+  },
+  "demands": [],
+  "minimumAgentVersion": "2.0.0",
+  "inputs": [
+    {
+      "name": "connection",
+      "type": "connectedService:nuget:UsernamePassword",
+      "label": "Nexus Service Connection",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "Nexus Service Connection used to pull deployment package."
+    },
+    {
+      "name": "definition",
+      "type": "pickList",
+      "label": "Repository",
+      "defaultValue": "",
+      "required": true,
+      "properties": {
+        "EditableOptions": "True"
+      },
+      "helpMarkDown": "Select the repository"
+    },
+    {
+      "name": "component",
+      "type": "pickList",
+      "label": "Nuget Package Name",
+      "defaultValue": "",
+      "required": true,
+      "properties": {
+        "EditableOptions": "True"
+      },
+      "helpMarkDown": "Select the nuget package to download from Nexus package server."
+    },
+    {
+      "name": "version",
+      "type": "pickList",
+      "label": "Version",
+      "defaultValue": "Latest",
+      "required": true,
+      "properties": {
+        "EditableOptions": "True"
+      },
+      "helpMarkDown": "Select the version of the nuget package to download."
+    },
+    {
+      "name": "downloadPath",
+      "type": "string",
+      "label": "Destination directory",
+      "defaultValue": "$(System.ArtifactsDirectory)",
+      "required": true,
+      "helpMarkDown": "Path on the agent machine where the artifact will be downloaded"
+    }
+  ],
+  "dataSourceBindings": [
+    {
+      "endpointId": "$(connection)",
+      "target": "definition",
+      "dataSourceName": "Repository",
+      "resultTemplate": "{ \"Value\" : \"{{name}}\", \"DisplayValue\" : \"{{{name}}}\" }"
+    },
+    {
+      "endpointId": "$(connection)",
+      "target": "component",
+      "dataSourceName": "Components",
+      "parameters": {
+          "definition": "$(definition)"
+      },
+      "resultTemplate": "{ \"Value\" : \"{{name}}\", \"DisplayValue\" : \"{{{name}}}\" }"
+    },
+    {
+      "endpointId": "$(connection)",
+      "target": "version",
+      "dataSourceName": "Versions",
+      "parameters": {
+          "definition": "$(definition)",
+          "component": "$(component)"
+      },
+      "resultTemplate": "{ \"Value\" : \"{{version}}\", \"DisplayValue\" : \"{{{version}}}\" }"
+    }
+  ], 
+  "instanceNameFormat": "Download Artifacts - Nexus",
+  "execution": {
+    "Node": {
+      "target": "download.ts",
+      "argumentFormat": ""
+    }
+  },
+  "messages": {
+    "DownloadArtifacts": "Downloading artifacts from : %s",
+    "ArtifactsSuccessfullyDownloaded": "Successfully downloaded artifacts to %s"
+  }
+}
