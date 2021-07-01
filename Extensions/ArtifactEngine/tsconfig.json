@@ -7,6 +7,10 @@
         "declaration": true,
         "rootDir": ".",
         "removeComments": true,
-        "forceConsistentCasingInFileNames": true
+        "forceConsistentCasingInFileNames": true,
+        "noEmit":false,
+        "esModuleInterop": true,
+        "lib": ["es6", "es7", "dom", "esnext"],
+        "outDir": "dist/",
     }
 }

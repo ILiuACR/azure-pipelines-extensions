@@ -1,9 +1,10 @@
 {
-  "name": "DownloadTeamCityArtifacts",
+  "name": "downloadnexusartifacts",
+  "version": "1.0.0",
   "main": "download.js",
   "dependencies": {
     "vsts-task-lib": "2.2.1",
-    "artifact-engine": "1.0.1",
+    "artifact-engine": "0.1.29",
     "underscore": "1.9.0"
   }
 }

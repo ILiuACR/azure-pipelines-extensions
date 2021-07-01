@@ -10,7 +10,8 @@
     "artifact"
   ],
   "license": "MIT",
-  "main": "",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "author": {
     "name": "omeshp",
     "email": "omeshp@microsoft.com"
@@ -52,9 +53,11 @@
     "README.md",
     "ThirdPartyNotices.txt",
     "lib.json",
-    "Strings/**"
+    "Strings/**",
+    "lib/**/*"
   ],
   "scripts": {
-    "test": "nyc ./node_modules/mocha/bin/_mocha --reporter mocha-tap-reporter **/*Tests.js"
+    "test": "nyc ./node_modules/mocha/bin/_mocha --reporter mocha-tap-reporter **/*Tests.js",
+    "build" : "tsc"
   }
 }

@@ -3,7 +3,7 @@
   "id": "vss-services-nexus",
   "name": "Nexus artifacts for Release Management",
   "publisher": "irisliu",
-  "version": "1.0.28",
+  "version": "1.1.10",
   "public": false,
   "description": "Tools related to connecting with Nexus",
   "_description.comment": "The below format to define artifact extensions is currently in preview and may change in future.",
@@ -12,7 +12,7 @@
   "targets": [
     {
       "id": "Microsoft.VisualStudio.Services"
-    }
+    }        
   ],
   "demands": [ "contribution/ms.vss-releaseartifact.artifact-types" ],
   "icons": {
@@ -222,7 +222,8 @@
         "taskInputMapping":{
           "connection": "{{{connection}}}",
           "definition":"{{{definition}}}",
-          "component": "{{{component}}}"
+          "component": "{{{component}}}",
+          "latestversion":"{{{latestversion}}}"
         },
         "dataSourceBindings": [
           {

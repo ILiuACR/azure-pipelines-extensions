@@ -2,17 +2,24 @@
   "name": "vsts-iiswebapp",
   "version": "1.0.0",
   "description": "IIS web application extension for deploying asp.net website.",
-  "main": "app.js",
+  "main": "package.js",
   "author": "Microsoft",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/Microsoft/vsts-iiswebdeploy.git"
   },
-  "devDependencies": {
+  "dependencies": {
     "adm-zip": "^0.5.5",
+    "artifact-engine": "^1.0.1",
+    "azure-pipelines-task-lib": "^3.1.3",
+    "chokidar": "^3.5.2",
+    "commonjs": "^0.0.1",
     "del": "^6.0.0",
+    "express": "^4.17.1",
     "fs-extra": "^10.0.0",
+    "fsevents": "^2.3.2",
+    "graceful-fs": "^4.2.6",
     "gulp": "^4.0.2",
     "gulp-mocha": "^8.0.0",
     "gulp-typescript": "^5.0.1",
@@ -21,23 +28,18 @@
     "minimatch": "^3.0.4",
     "minimist": "^1.2.5",
     "mocha": "^9.0.1",
+    "natives": "^1.1.6",
     "q": "^1.5.1",
     "request": "^2.88.0",
     "semver": "^7.3.5",
     "shelljs": "^0.8.4",
     "sync-request": "^6.1.0",
     "through2": "^4.0.2",
+    "typed-rest-client": "^1.8.4",
     "typescript": "^4.3.4",
     "validator": "^13.6.0",
     "vsts-task-lib": "^2.0.5",
     "xml2js": "^0.4.17",
     "yargs": "^17.0.1"
-  },
-  "dependencies": {
-    "chokidar": "^3.5.2",
-    "express": "^4.17.1",
-    "fsevents": "^2.3.2",
-    "graceful-fs": "^4.2.6",
-    "natives": "^1.1.6"
   }
 }

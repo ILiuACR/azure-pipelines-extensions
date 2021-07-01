@@ -24,7 +24,7 @@ async function run() {
 
         var collectionUri = tl.getVariable("System.CollectionUri");
         var teamProject = tl.getVariable("System.TeamProject");
-        var releaseId = tl.getVariable("Release.ReleaseId");
+        var releaseId = Number(tl.getVariable("Release.ReleaseId"));
 
         const accessToken: string = tl.getEndpointAuthorizationParameter('SYSTEMVSSCONNECTION', 'ACCESSTOKEN', false);
         if (!accessToken)

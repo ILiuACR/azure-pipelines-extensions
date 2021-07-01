@@ -1,13 +1,15 @@
 
 var path = require('path')
 var url = require('url')
-var express = require("express");
 
 import * as tl from 'vsts-task-lib/task';
 import * as models from 'artifact-engine/Models';
 import * as engine from 'artifact-engine/Engine';
 import * as providers from 'artifact-engine/Providers';
 import * as webHandlers from 'artifact-engine/Providers/typed-rest-client/Handlers';
+import { ArtifactItem } from 'artifact-engine/Models';
+import { ArtifactItemStore } from 'artifact-engine/Store/artifactItemStore';
+import * as worker from 'artifact-engine/Engine/worker';
 
 tl.setResourcePath(path.join(__dirname, 'task.json'));
 
@@ -58,15 +60,12 @@ async function main(): Promise<void> {
         let repository = tl.getInput("definition", true);
         let packageName = tl.getInput("component", true);
         let version = tl.getInput("version", true);
-        let latestVersion =tl.getInput("latestversion", true);
+        // let latestVersion =tl.getInput("latestversion", true);
         let itemPattern = tl.getInput("itemPattern", false);
         let downloadPath = tl.getInput("downloadPath", true);
-        if(version === "Latest"){
-            version = latestVersion;
-        }
 
         var endpointUrl = tl.getEndpointUrl(connection, false);
-        var itemsUrl = endpointUrl + "/repository/" + repository + "/" + packageName + "/" + version;
+        var itemsUrl = endpointUrl + "repository/" + repository + "/" + packageName + "/" + version;
         // itemsUrl = itemsUrl.replace(/([^:]\/)\/+/g, "$1");
         console.log(tl.loc("DownloadArtifacts", itemsUrl));
 
@@ -94,15 +93,101 @@ async function main(): Promise<void> {
             downloaderOptions.parallelProcessingLimit = parallelLimit;
         }
 
-        await downloader.processItems(webProvider, fileSystemProvider, downloaderOptions).then((result) => {
-            console.log(tl.loc('ArtifactsSuccessfullyDownloaded', downloadPath));
-            resolve();
+        await webProvider.getRootItem().then((itemToProcess: models.ArtifactItem) => {
+            var artifactItemStore: ArtifactItemStore = new ArtifactItemStore();
+            itemToProcess.path = packageName+"."+version+".nupkg";
+            itemToProcess.itemType = models.ItemType.File;
+
+            console.log(itemToProcess);
+            const workers: Promise<void>[] = [];
+            artifactItemStore.flush();
+
+            engine.Logger.verbose = downloaderOptions.verbose;
+            var logger = new engine.Logger(artifactItemStore);
+            logger.logProgress();
+            webProvider.artifactItemStore = artifactItemStore;
+            fileSystemProvider.artifactItemStore = artifactItemStore;
+
+            webProvider.getArtifactItem(itemToProcess).then((contentStream) => {
+                artifactItemStore.addItem(itemToProcess);
+
+                for (let i = 0; i < downloaderOptions.parallelProcessingLimit; ++i) {
+                    var worker = new engine.Worker<models.ArtifactItem>(i + 1, item => processArtifactItem(webProvider, item, fileSystemProvider, downloaderOptions, artifactItemStore), () => artifactItemStore.getNextItemToProcess(), () => !artifactItemStore.itemsPendingProcessing(), () => artifactItemStore.hasDownloadFailed());
+                    workers.push(worker.init());
+                }
+
+                Promise.all(workers).then(() => {
+                    logger.logSummary();
+                    webProvider.dispose();
+                    fileSystemProvider.dispose();
+                    resolve();
+                }, (err) => {
+                    // ci.publishEvent('reliability', <ci.IReliabilityData>{ issueType: 'error', errorMessage: JSON.stringify(err, Object.getOwnPropertyNames(err)) });
+                    webProvider.dispose();
+                    fileSystemProvider.dispose();
+                    reject(err);
+                });
+
+
+                // engine.Logger.logInfo("Got download stream for item: " + itemToProcess.path);
+                // fileSystemProvider.putArtifactItem(itemToProcess, contentStream)
+                //     .then((item) => {
+                //         artifactItemStore.updateState(item, models.TicketState.Processed);
+                //         console.log("Successfully downloaded artifacts to " + downloadPath + itemToProcess.path);
+                //         resolve();
+                //     }, (err) => {
+                //         console.log("Error placing file " + itemToProcess.path+ ": " + err);
+                //     });
+                // resolve();
+
+            }, (err) => {
+                console.log("Error getting file " + itemToProcess.path+ ": " + err);
+                webProvider.dispose();
+                fileSystemProvider.dispose();
+                reject(err);
+            });
+
         }).catch((error) => {
             reject(error);
         });
     });
 
     return promise;
+}
+
+function processArtifactItem(sourceProvider: models.IArtifactProvider,
+    item: models.ArtifactItem,
+    destProvider: models.IArtifactProvider,
+    artifactEngineOptions: engine.ArtifactEngineOptions,
+    artifactItemStore: ArtifactItemStore): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        processArtifactItemImplementation(sourceProvider, item, destProvider, artifactEngineOptions,artifactItemStore, resolve, reject);
+    });
+}
+
+function processArtifactItemImplementation(sourceProvider: models.IArtifactProvider,
+    item: models.ArtifactItem,
+    destProvider: models.IArtifactProvider,
+    artifactEngineOptions: engine.ArtifactEngineOptions,
+    artifactItemStore: ArtifactItemStore,
+    resolve,
+    reject,
+    retryCount?: number) {
+
+    sourceProvider.getArtifactItem(item).then((contentStream) => {
+        engine.Logger.logInfo("Got download stream for item: " + item.path);
+        destProvider.putArtifactItem(item, contentStream)
+            .then((item) => {
+                artifactItemStore.updateState(item, models.TicketState.Processed);
+                console.log("Successfully downloaded artifact: " + item.path);
+                resolve();
+            }, (err) => {
+                engine.Logger.logInfo("Error placing file " + item.path + ": " + err);
+                console.log("Error placing file " + item.path+ ": " + err);
+            });
+    }, (err) => {
+        engine.Logger.logInfo("Error getting file " + item.path + ": " + err);
+    });
 }
 
 main()

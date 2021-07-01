@@ -31,8 +31,17 @@ export class WebProvider implements IArtifactProvider {
         var rootItem = new ArtifactItem();
         rootItem.metadata = { downloadUrl: this.rootItemsLocation };
         rootItem.path = '';
-        rootItem.itemType = ItemType.Folder;
+        rootItem.itemType = ItemType.File;
         return Promise.resolve([rootItem]);
+    }
+
+    getRootItem(): Promise<ArtifactItem> {
+        var rootItem = new ArtifactItem();
+        rootItem.metadata = { downloadUrl: this.rootItemsLocation };
+        rootItem.path = this.rootItemsLocation;
+        rootItem.itemType = ItemType.File;
+        rootItem.contentType = "application/zip"
+        return Promise.resolve(rootItem);
     }
 
     getArtifactItems(artifactItem: ArtifactItem): Promise<ArtifactItem[]> {
